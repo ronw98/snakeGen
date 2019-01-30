@@ -4,6 +4,7 @@ import time
 import Network
 from pynput import keyboard
 import os
+"""Program that lets the IA play snake"""
 class Game:
     def __init__(self):
         self.board = Board.Board()
