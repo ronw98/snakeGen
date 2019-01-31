@@ -2,7 +2,6 @@ import Board as Board
 import  Snake as Snake
 import time
 import Network
-from pynput import keyboard
 import os
 """Program that lets the IA play snake"""
 class Game:
@@ -49,11 +48,40 @@ class Game:
         head = self.snake.body[0]
         if head[1] >=79 or head[0] >= 29:
             return True
-        if head[1] <0 or head[0] < 0:
+        if head[1] <=0 or head[0] <=0:
             return True
         for i in range(1,len(self.snake.body)):
             if head == self.snake.body[i]:
                 return True
+
+    def reset(self):
+        self.board=Board()
+        self.snake=Snake()
+
+    def play(self,network):
+        finished = False;
+        score = 0
+        nbFrames = 0
+        while not finished:
+            nbFrames+=1
+            input = game.status()
+            move = network.takeDecision(input)
+            if move == 0:
+                game.snake.changeDirection((0, 1))
+            elif move == 1:
+                game.snake.changeDirection((0, -1))
+            elif move == 2:
+                game.snake.changeDirection((1, 0))
+            elif move == 3:
+                game.snake.changeDirection((-1, 0))
+            game.snake.move()
+            if (game.hasEaten()):
+                game.snake.grow()
+                game.board.createFruit()
+                score += 1
+            if game.end():
+                finished = True
+        return (score,nbFrames)
 
 
 if __name__  ==  '__main__':

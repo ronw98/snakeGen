@@ -19,8 +19,8 @@ class Board:
 
     def createFruit(self):
         self.board[self.fruit[0]][self.fruit[1]] = ' '
-        fruitX = random.randint(0,78)
-        fruitY = random.randint(0,28)
+        fruitX = random.randint(1,78)
+        fruitY = random.randint(1,28)
         self.fruit = (fruitY,fruitX)
         self.board[fruitY][fruitX] = '@'
 

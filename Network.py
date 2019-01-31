@@ -49,9 +49,43 @@ class Network:
     def takeDecision(self,input):
         return findMax(self.feedforward(input))
 
+    def reproduction(self,network):
+        child = Network()
+        cut = random.randint(0,20*2400 -1)
+        cutI = cut // 20
+        cutJ = cut - cutI*20
+
+        #Mixing the hidden layer weights and biases
+        for i in range(0,cutI):
+            for j in range(0,cutJ):
+                child.weights[0][i][j] = self.weights[0][i][j]
+            child.biases[0][i] = self.weights[0][i]
+        for i in range(cutI, len(child.biases[0])):
+            for j in range(cutJ,len(child.biases[0][0])):
+                child.weights[0][i][j] = network.weights[0][i][j]
+            child.biases[0][i] = network.biases[0][i]
+
+        #Mixing output layer weights and biases
+        cut = random.randint(0,20*4-1)
+        cutI = cut//4
+        cutJ = cut - cutI*4
+
+        for i in range(0,cutI):
+            for j in range(0,cutJ):
+                child.weights[1][i][j] = self.weights[1][i][j]
+            child.biases[1][i] = self.weights[1][i]
+        for i in range(cutI, len(child.biases[1])):
+            for j in range(cutJ,len(child.biases[1][0])):
+                child.weights[1][i][j] = network.weights[1][i][j]
+            child.biases[1][i] = network.biases[1][i]
+
+        return child
+
 def sigmoid(z):
     """The sigmoid function."""
     return 1.0/(1.0+math.exp(-z))
+
+
 def findMax(tab):
     imax = 0
     max = tab[0]
