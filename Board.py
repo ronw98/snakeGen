@@ -25,7 +25,7 @@ class Board:
         self.board[fruitY][fruitX] = '@'
 
 
-    def print(self):
+    def printB(self):
         res = ""
         for line in self.board:
             for cell in line:
@@ -35,6 +35,6 @@ class Board:
 
 if __name__=='__main__':
     board = Board()
-    board.print()
+    board.printB()
     board.createFruit()
-    board.print()
+    board.printB()

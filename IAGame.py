@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import Board as Board
 import  Snake as Snake
 import time
@@ -23,7 +25,7 @@ class Game:
             stat[80*coord[0] + coord[1]]=1
         return stat
 
-    def print(self):
+    def printG(self):
         disp =  []
         for j in range(0,30):
             disp.append([])
@@ -87,7 +89,7 @@ class Game:
 if __name__  ==  '__main__':
     network = Network.Network()
     game = Game()
-    game.print()
+    game.printG()
     finished = False;
     score = 0;
     while not finished:
@@ -111,5 +113,5 @@ if __name__  ==  '__main__':
         if game.end():
             finished = True
         os.system('clear')
-        game.print()
+        game.printG()
         print(score)

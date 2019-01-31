@@ -8,7 +8,7 @@ class Game:
         self.board = Board.Board()
         self.snake = Snake.Snake()
 
-    def print(self):
+    def printG(self):
         disp =  []
         for j in range(0,30):
             disp.append([])
@@ -56,7 +56,7 @@ def on_press(key):
 if __name__  ==  '__main__':
     global game
     game = Game()
-    game.print()
+    game.printG()
     finished = False;
     score = 0;
     with keyboard.Listener(on_press=on_press
@@ -71,5 +71,5 @@ if __name__  ==  '__main__':
             if game.end():
                 finished = True
             os.system('clear')
-            game.print()
+            game.printG()
             print(score)

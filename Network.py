@@ -50,7 +50,8 @@ class Network:
         return findMax(self.feedforward(input))
 
     def reproduction(self,network):
-        child = Network()
+        child1 = Network()
+        child2 = Network()
         cut = random.randint(0,20*2400 -1)
         cutI = cut // 20
         cutJ = cut - cutI*20
@@ -58,12 +59,17 @@ class Network:
         #Mixing the hidden layer weights and biases
         for i in range(0,cutI):
             for j in range(0,cutJ):
-                child.weights[0][i][j] = self.weights[0][i][j]
-            child.biases[0][i] = self.weights[0][i]
-        for i in range(cutI, len(child.biases[0])):
-            for j in range(cutJ,len(child.biases[0][0])):
-                child.weights[0][i][j] = network.weights[0][i][j]
-            child.biases[0][i] = network.biases[0][i]
+                child1.weights[0][i][j] = self.weights[0][i][j]
+                child2.weights[0][i][j] = network.weights[0][i][j]
+            child1.biases[0][i] = self.weights[0][i]
+            child2.biases[0][i] = network.weights[0][i]
+        for i in range(cutI, len(child1.biases[0])):
+            for j in range(cutJ,len(child1.biases[0][0])):
+                child1.weights[0][i][j] = network.weights[0][i][j]
+                child2.weights[0][i][j] = self.weights[0][i][j]
+            child1.biases[0][i] = network.biases[0][i]
+            child2.biases[0][i] = self.biases[0][i]
+
 
         #Mixing output layer weights and biases
         cut = random.randint(0,20*4-1)
@@ -72,14 +78,22 @@ class Network:
 
         for i in range(0,cutI):
             for j in range(0,cutJ):
-                child.weights[1][i][j] = self.weights[1][i][j]
-            child.biases[1][i] = self.weights[1][i]
-        for i in range(cutI, len(child.biases[1])):
-            for j in range(cutJ,len(child.biases[1][0])):
-                child.weights[1][i][j] = network.weights[1][i][j]
-            child.biases[1][i] = network.biases[1][i]
+                child1.weights[1][i][j] = self.weights[1][i][j]
+                child2.weights[1][i][j] = network.weights[1][i][j]
 
-        return child
+            child1.biases[1][i] = self.weights[1][i]
+            child2.biases[1][i] = network.weights[1][i]
+
+        for i in range(cutI, len(child1.biases[1])):
+            for j in range(cutJ,len(child1.biases[1][0])):
+                child1.weights[1][i][j] = network.weights[1][i][j]
+                child2.weights[1][i][j] = self.weights[1][i][j]
+
+            child1.biases[1][i] = network.biases[1][i]
+            child2.biases[1][i] = self.biases[1][i]
+
+
+        return [child1,child2]
 
 def sigmoid(z):
     """The sigmoid function."""
