@@ -57,8 +57,8 @@ class Game:
                 return True
 
     def reset(self):
-        self.board=Board()
-        self.snake=Snake()
+        self.board= Board.Board()
+        self.snake=Snake.Snake()
 
     def play(self,network):
         finished = False;

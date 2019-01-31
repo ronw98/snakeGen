@@ -16,10 +16,8 @@ class Network:
         sizes = [2400,20,4]
         self.sizes = sizes
         self.biases = [[random.uniform(-10,10) for x in range(0,y)] for y in sizes[1:]]
-        print(self.biases[1])
         self.weights = [[[random.uniform(-1,1) for prevneuron in range(0,sizes[i-1])]for neuron in range(0,sizes[i])]
                         for i in range(1,3)]
-        print(len(self.weights[0][1]))
 
     def feedforward(self, a):
         """Return the output of the network if ``a`` is input."""
@@ -43,7 +41,6 @@ class Network:
             z+= self.biases[1][neuron]
             z = sigmoid(z)
             outputValues.append(z)
-        print(outputValues)
         return outputValues
 
     def takeDecision(self,input):
@@ -53,18 +50,18 @@ class Network:
         child1 = Network()
         child2 = Network()
         cut = random.randint(0,20*2400 -1)
-        cutI = cut // 20
-        cutJ = cut - cutI*20
+        cutI = cut // 2400
+        cutJ = cut - cutI*2400
 
         #Mixing the hidden layer weights and biases
         for i in range(0,cutI):
             for j in range(0,cutJ):
                 child1.weights[0][i][j] = self.weights[0][i][j]
                 child2.weights[0][i][j] = network.weights[0][i][j]
-            child1.biases[0][i] = self.weights[0][i]
-            child2.biases[0][i] = network.weights[0][i]
+            child1.biases[0][i] = self.biases[0][i]
+            child2.biases[0][i] = network.biases[0][i]
         for i in range(cutI, len(child1.biases[0])):
-            for j in range(cutJ,len(child1.biases[0][0])):
+            for j in range(cutJ,len(child1.weights[0][0])):
                 child1.weights[0][i][j] = network.weights[0][i][j]
                 child2.weights[0][i][j] = self.weights[0][i][j]
             child1.biases[0][i] = network.biases[0][i]
@@ -73,19 +70,19 @@ class Network:
 
         #Mixing output layer weights and biases
         cut = random.randint(0,20*4-1)
-        cutI = cut//4
-        cutJ = cut - cutI*4
+        cutI = cut//20
+        cutJ = cut - cutI*20
 
         for i in range(0,cutI):
             for j in range(0,cutJ):
                 child1.weights[1][i][j] = self.weights[1][i][j]
                 child2.weights[1][i][j] = network.weights[1][i][j]
 
-            child1.biases[1][i] = self.weights[1][i]
-            child2.biases[1][i] = network.weights[1][i]
+            child1.biases[1][i] = self.biases[1][i]
+            child2.biases[1][i] = network.biases[1][i]
 
         for i in range(cutI, len(child1.biases[1])):
-            for j in range(cutJ,len(child1.biases[1][0])):
+            for j in range(cutJ,len(child1.weights[1][0])):
                 child1.weights[1][i][j] = network.weights[1][i][j]
                 child2.weights[1][i][j] = self.weights[1][i][j]
 
