@@ -1,7 +1,7 @@
 import random
 import math
 class Network:
-    def __init__(self):
+    def __init__(self,sizes):
         """The list ``sizes`` contains the number of neurons in the
         respective layers of the network.  For example, if the list
         was [2, 3, 1] then it would be a three-layer network, with the
@@ -13,7 +13,6 @@ class Network:
         won't set any biases for those neurons, since biases are only
         ever used in computing the outputs from later layers."""
         self.num_layers = 3
-        sizes = [2400,20,4]
         self.sizes = sizes
         self.biases = [[random.uniform(-10,10) for x in range(0,y)] for y in sizes[1:]]
         self.weights = [[[random.uniform(-1,1) for prevneuron in range(0,sizes[i-1])]for neuron in range(0,sizes[i])]
@@ -25,18 +24,18 @@ class Network:
         hidValues = []
         #hidden layer values
         #for each neuron
-        for neuron in range(0,20):
+        for neuron in range(0,self.sizes[1]):
             #compute linear combination
             z = 0
-            for weight in range(0,2400):
+            for weight in range(0,self.sizes[0]):
                 z+= a[weight] * self.weights[0][neuron][weight]
             z+= self.biases[0][neuron]
             z=sigmoid(z)
             hidValues.append(z)
         #output values
-        for neuron in range(0,4):
+        for neuron in range(0,self.sizes[2]):
             z = 0
-            for weight in range(0,20):
+            for weight in range(0,self.sizes[1]):
                 z+= hidValues[weight] * self.weights[1][neuron][weight]
             z+= self.biases[1][neuron]
             z = sigmoid(z)
@@ -47,11 +46,11 @@ class Network:
         return findMax(self.feedforward(input))
 
     def reproduction(self,network):
-        child1 = Network()
-        child2 = Network()
-        cut = random.randint(0,20*2400 -1)
-        cutI = cut // 2400
-        cutJ = cut - cutI*2400
+        child1 = Network(self.sizes)
+        child2 = Network(self.sizes)
+        cut = random.randint(0,self.sizes[1]*self.sizes[0] -1)
+        cutI = cut // self.sizes[0]
+        cutJ = cut - cutI*self.sizes[0]
 
         #Mixing the hidden layer weights and biases
         for i in range(0,cutI):
@@ -69,9 +68,9 @@ class Network:
 
 
         #Mixing output layer weights and biases
-        cut = random.randint(0,20*4-1)
-        cutI = cut//20
-        cutJ = cut - cutI*20
+        cut = random.randint(0,self.sizes[1]*self.sizes[2]-1)
+        cutI = cut//self.sizes[1]
+        cutJ = cut - cutI*self.sizes[1]
 
         for i in range(0,cutI):
             for j in range(0,cutJ):
@@ -91,6 +90,33 @@ class Network:
 
 
         return [child1,child2]
+
+    def mutate(self):
+        for layer in self.weights:
+            for neuron in layer:
+                i = random.randint(0,333)
+                if i == 0:
+                    for weight in neuron:
+                        weight+= random.randint(-1,1) * 0.5
+                        if weight > 1:
+                            weight = 1
+                        if weight < -1:
+                            weight = -1
+    def tolog(self):
+        result = ""
+        for layer in self.weights:
+            for neuron in layer:
+                for weight in neuron:
+                    result +="{} ".format(weight)
+                result+="\n"
+            result+="\n\n"
+        result+="\n\n\n"
+        for layer in self.biases:
+            for neuronBias in layer:
+                result+="{}".format(neuronBias)
+                result+="\n"
+            result+="\n\n"
+
 
 def sigmoid(z):
     """The sigmoid function."""

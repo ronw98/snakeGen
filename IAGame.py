@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 import Board as Board
 import  Snake as Snake
 import time
@@ -9,20 +10,24 @@ import os
 class Game:
     def __init__(self):
         self.board = Board.Board()
-        self.snake = Snake.Snake()
+        self.snake = Snake.Snake(self.board.height,self.board.width)
 
     def status(self):
         stat = []
-        for i in range(0,30):
-            for j in range(0,80):
-                if self.board.board[i][j] == '■':
-                    stat.append(-5)
-                elif self.board.board[i][j] == ' ':
-                    stat.append(0)
-                else:
-                    stat.append(5)
-        for coord in self.snake.body:
-            stat[80*coord[0] + coord[1]]=1
+        stat.append(self.snake.head()[0])
+        stat.append(self.snake.head()[1])
+        stat.append(self.snake.mid()[0])
+        stat.append(self.snake.mid()[1])
+        stat.append(self.snake.tail()[0])
+        stat.append(self.snake.tail()[1])
+        stat.append(self.snake.turns())
+        stat.append(self.snake.length())
+        stat.append(self.snake.direction[0])
+        stat.append(self.snake.direction[1])
+        stat.append(self.board.fruit[0])
+        stat.append(self.board.fruit[1])
+        stat.append(self.board.width)
+        stat.append(self.board.height)
         return stat
 
     def printG(self):
@@ -58,7 +63,7 @@ class Game:
 
     def reset(self):
         self.board= Board.Board()
-        self.snake=Snake.Snake()
+        self.snake=Snake.Snake(self.board.height,self.board.width)
 
     def play(self,network):
         finished = False;
