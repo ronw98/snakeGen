@@ -94,10 +94,10 @@ class Network:
     def mutate(self):
         for layer in self.weights:
             for neuron in layer:
-                i = random.randint(0,333)
+                i = random.randint(0,1000)
                 if i == 0:
                     for weight in neuron:
-                        weight+= random.randint(-1,1) * 0.5
+                        weight+= random.randint(-1,1) * 0.05
                         if weight > 1:
                             weight = 1
                         if weight < -1:

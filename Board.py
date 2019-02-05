@@ -2,14 +2,14 @@ import random
 
 
 class Board:
-    def __init__(self):
+    def __init__(self,height, width):
         self.board = []
-        self.width = 80
-        self.height = 30
-        self.fruit = (20,22)
+        self.width = width
+        self.height = height
+        self.fruit = (0,0)
         for i in range(0,self.height):
             self.board.append([])
-            if i ==0 or i==29:
+            if i ==0 or i==self.height-1:
                 for j in range(0,self.width):
                     self.board[i].append('■')
             else:

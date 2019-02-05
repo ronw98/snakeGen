@@ -28,10 +28,10 @@ class Genetics:
     def fitness(self,gameRes):
         score = gameRes[0]
         nbFrames = gameRes[1]
-        return nbFrames
+        return 5*score + nbFrames
 
     def bestOnes(self):
-        nbWanted = 20
+        nbWanted = 2
         self.bests = []
         def takeFirst(elem):
             return elem[0]
@@ -43,11 +43,12 @@ class Genetics:
                 if result[0] > self.bests[-1][0]:
                     del self.bests[-1]
                     self.bests.append(result)
+                    self.bests.sort(key=takeFirst,reverse=True)
 
     def createNewPop(self,bests):
         tmp=[]
         bestNeurons = [couple[1] for couple in bests]
-        random.shuffle(bestNeurons)
+        #random.shuffle(bestNeurons)
         for i in range(0,10):
             for par1,par2 in zip(bestNeurons[0::2],bestNeurons[1::2]):
                 children = par1.reproduction(par2)
@@ -59,8 +60,8 @@ class Genetics:
         for individual in self.population:
                 individual.mutate()
 
-    def playOneGen(self):
-        game = IAGame.Game()
+    def playOneGen(self,height,width):
+        game = IAGame.Game(height,width)
         self.results = []
         for network in self.population:
             score = 0
@@ -96,51 +97,70 @@ def on_press(key):
         next = True
 
 if __name__=='__main__':
+    fit = []
     bestEver = []
     nbGenerationToRun = 300
     GenerationSize = 200
+    height = 20
+    width = 20
     help = 'This programm is a genetic algorithm trying to play snake\n'
     help += 'python3 Genetics.py [option] <argument>\n'
     help += 'List of options:\n'
     help += ' --help : show this window\n'
     help += '    -n : number of generations to train on\n'
     help += '    -s : number of individuals in a generation\n'
+    help += '    -h : height of the board\n'
+    help += '    -w : width of the board\n'
     help+= 'Example: python3 Genetics.py -n 10 -s 100'
     if len(sys.argv) == 2 and sys.argv[1] == '--help':
         print (help)
         sys.exit()
-    if len(sys.argv) == 3:
-        if sys.argv[1] == '-n':
+        """if len(sys.argv) == 3:
+            if sys.argv[1] == '-n':
+                try:
+                    nbGenerationToRun = int(sys.argv[2])
+                except:
+                    print('Argument must be an integer\n')
+                    sys.exit()
+            elif sys.argv[1] == 's':
+                try:
+                    GenerationSize= int(sys.argv[2])
+                except:
+                    print('Argument must be an integer\n')
+                    sys.exit()
+        if len(sys.argv) == 5:
             try:
-                nbGenerationToRun = int(sys.argv[2])
+                if sys.argv[1] == '-n' and sys.argv[3] == '-s':
+                    nbGenerationToRun = int(sys.argv[2])
+                    GenerationSize = int(sys.argv[4])
+                elif sys.argv[3] == '-n' and sys.argv[1] == '-s':
+                    nbGenerationToRun = int(sys.argv[4])
+                    GenerationSize = int(sys.argv[2])
+                else:
+                    print('Wrong arguments format. Call --help for expected format.')
+                    sys.exit()
             except:
                 print('Argument must be an integer\n')
                 sys.exit()
-        elif sys.argv[1] == 's':
+        elif  len(sys.arv) != 0:
+            print('Wrong arguments format. Call --help for expected format.')
+            sys.exit()"""
+    else:
+        for i in range(1,len(sys.argv)-1):
             try:
-                GenerationSize= int(sys.argv[2])
+                opt = sys.argv[i]
+                if opt == '-h':
+                    height = int(sys.argv[i+1])
+                elif opt == '-w':
+                    width = int(sys.argv[i+1])
+                elif opt == '-n':
+                    nbGenerationToRun = int(sys.argv[i+1])
+                elif opt == '-s':
+                    GenerationSize = int(sys.argv[i+1])
             except:
                 print('Argument must be an integer\n')
                 sys.exit()
-    if len(sys.argv) == 5:
-        try:
-            if sys.argv[1] == '-n' and sys.argv[3] == '-s':
-                nbGenerationToRun = int(sys.argv[2])
-                GenerationSize = int(sys.argv[4])
-            elif sys.argv[3] == '-n' and sys.argv[1] == '-s':
-                nbGenerationToRun = int(sys.argv[4])
-                GenerationSize = int(sys.argv[2])
-            else:
-                print('Wrong arguments format. Call --help for expected format.')
-                sys.exit()
-        except:
-            print('Argument must be an integer\n')
-            sys.exit()
-    elif  len(sys.arv) != 0:
-        print('Wrong arguments format. Call --help for expected format.')
-        sys.exit()
-
-    gen = Genetics(GenerationSize,[14,40,4])
+    gen = Genetics(GenerationSize,[height*width,30,4])
     print(nbGenerationToRun)
     os.system('rm -rf Logs')
     os.system('mkdir Logs')
@@ -150,16 +170,22 @@ if __name__=='__main__':
     os.system('mkdir Logs/Generation{}'.format(nbGenerationToRun-1))
     for i in range(0,nbGenerationToRun):
         print("Generation numero: {}".format(i))
-        gen.playOneGen()
+        gen.playOneGen(height,width)
         gen.bestOnes()
         gen.createNewPop(gen.bests)
         gen.mutation()
         print(len(gen.population))
         if i % 10 ==0 or i==nbGenerationToRun-1:
             with open('Logs/Generation{}/result.log'.format(gen.genNum-1), 'w') as file:
+                average = 0
                 for result in gen.bests:
+                    average+=result[0]
                     file.write('Fitness: {}\n'.format(result[0]))
+                file.write("Average fitness: {} ".format(average/len(gen.bests)))
+        fit.append(average/len(gen.bests))
             #os.system('gedit Logs/Generation{}/result.log &'.format(gen.genNum-1))
+    with open('fitresult.log','w') as file:
+        file.write(str(fit))
     for best in gen.bests:
         bestEver.append(best)
     global next
@@ -167,7 +193,7 @@ if __name__=='__main__':
     with keyboard.Listener(on_press=on_press) as listener:
         for element in bestEver:
             network = element[1]
-            game = IAGame.Game()
+            game = IAGame.Game(height,width)
             game.printG()
             finished = False;
             score = 0;

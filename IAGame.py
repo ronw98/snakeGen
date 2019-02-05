@@ -8,12 +8,12 @@ import Network
 import os
 """Program that lets the IA play snake"""
 class Game:
-    def __init__(self):
-        self.board = Board.Board()
+    def __init__(self,height,width):
+        self.board = Board.Board(height,width)
         self.snake = Snake.Snake(self.board.height,self.board.width)
 
     def status(self):
-        stat = []
+        """stat = []
         stat.append(self.snake.head()[0])
         stat.append(self.snake.head()[1])
         stat.append(self.snake.mid()[0])
@@ -28,17 +28,30 @@ class Game:
         stat.append(self.board.fruit[1])
         stat.append(self.board.width)
         stat.append(self.board.height)
+        return stat"""
+        stat = []
+        for i in range(0, self.board.height):
+            for j in range(0, self.board.width):
+                if self.board.board[i][j] == '■':
+                    stat.append(-5)
+                elif self.board.board[i][j] == ' ':
+                    stat.append(0)
+                else:
+                    stat.append(5)
+        for coord in self.snake.body:
+            stat[self.board.width * coord[0] + coord[1]] = 1
+
         return stat
 
     def printG(self):
         disp =  []
-        for j in range(0,30):
+        for j in range(0,self.board.height):
             disp.append([])
-            for i in range(0,80):
+            for i in range(0,self.board.width):
                 disp[j].append(' ')
         res = ""
-        for i in range(0,30):
-            for j in range(0,80):
+        for i in range(0,self.board.height):
+            for j in range(0,self.board.width):
                 disp[i][j] = self.board.board[i][j]
         for coord in self.snake.body:
             disp[coord[0]][coord[1]] = '●'
@@ -53,16 +66,16 @@ class Game:
 
     def end(self):
         head = self.snake.body[0]
-        if head[1] >=79 or head[0] >= 29:
+        if head[1] >=self.board.height-2 or head[0] >= self.board.width-2:
             return True
-        if head[1] <=0 or head[0] <=0:
+        if head[1] <=1 or head[0] <=1:
             return True
         for i in range(1,len(self.snake.body)):
             if head == self.snake.body[i]:
                 return True
 
     def reset(self):
-        self.board= Board.Board()
+        self.board= Board.Board(self.board.height,self.board.width)
         self.snake=Snake.Snake(self.board.height,self.board.width)
 
     def play(self,network):
