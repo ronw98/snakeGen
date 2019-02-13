@@ -28,7 +28,7 @@ class Genetics:
     def fitness(self,gameRes):
         score = gameRes[0]
         nbFrames = gameRes[1]
-        return 5*score + nbFrames
+        return 50*score + nbFrames
 
     def bestOnes(self):
         nbWanted = 2
@@ -175,13 +175,12 @@ if __name__=='__main__':
         gen.createNewPop(gen.bests)
         gen.mutation()
         print(len(gen.population))
-        if i % 10 ==0 or i==nbGenerationToRun-1:
-            with open('Logs/Generation{}/result.log'.format(gen.genNum-1), 'w') as file:
-                average = 0
-                for result in gen.bests:
-                    average+=result[0]
-                    file.write('Fitness: {}\n'.format(result[0]))
-                file.write("Average fitness: {} ".format(average/len(gen.bests)))
+        average = 0
+        for result in gen.bests:
+            average+=result[0]
+            if i % 10 ==0 or i==nbGenerationToRun-1:
+                print('Fitness: {}\n'.format(result[0]))
+        print("Average fitness: {} ".format(average/len(gen.bests)))	
         fit.append(average/len(gen.bests))
             #os.system('gedit Logs/Generation{}/result.log &'.format(gen.genNum-1))
     with open('fitresult.log','w') as file:
