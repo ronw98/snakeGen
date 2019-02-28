@@ -10,8 +10,8 @@ int main()
 	for(i = 0; i<NB_FRUITS; i++)
 	{
 		tab[i] = (int *) malloc(2*sizeof(int));
-		tab[i][0] = rand() % 20;
-		tab[i][1] = rand() % 20;
+		tab[i][0] = rand() % 19 + 1;
+		tab[i][1] = rand() % 19 + 1;
 	}
 	
 	FILE * fic = NULL;

@@ -1,0 +1,4 @@
+score + nbTurns + 0.5* nbFrames - nextToWall/nbFrames - 0.25 * tmaxNotEat
+score + nbTurns + 0.5* nbFrames - nextToWall/nbFrames
+score + nbTurns - nextToWall/nbFrames
+5 * score + nbTurns - 2 * nextToWall/nbFrames

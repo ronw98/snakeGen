@@ -6,6 +6,7 @@ import  Snake as Snake
 import time
 import Network
 import os
+import math
 """Program that lets the IA play snake"""
 class Game:
     def __init__(self,height,width):
@@ -13,23 +14,25 @@ class Game:
         self.snake = Snake.Snake(self.board.height,self.board.width)
 
     def status(self):
-        """stat = []
+        stat = []
         stat.append(self.snake.head()[0])
         stat.append(self.snake.head()[1])
-        stat.append(self.snake.mid()[0])
-        stat.append(self.snake.mid()[1])
-        stat.append(self.snake.tail()[0])
-        stat.append(self.snake.tail()[1])
-        stat.append(self.snake.turns())
-        stat.append(self.snake.length())
+    #    stat.append(self.snake.mid()[0])
+   #     stat.append(self.snake.mid()[1])
+  #      stat.append(self.snake.tail()[0])
+ #       stat.append(self.snake.tail()[1])
+#        stat.append(self.snake.turns())
+#        stat.append(self.snake.length())
         stat.append(self.snake.direction[0])
         stat.append(self.snake.direction[1])
         stat.append(self.board.fruit[0])
         stat.append(self.board.fruit[1])
         stat.append(self.board.width)
         stat.append(self.board.height)
-        return stat"""
-        stat = []
+        dst = math.sqrt(math.pow((self.snake.head()[0] - self.board.fruit[0]),2) + math.pow((self.snake.head()[1] - self.board.fruit[1]),2)) 
+        stat.append(dst)
+        return stat
+        """stat = []
         for i in range(0, self.board.height):
             for j in range(0, self.board.width):
                 if self.board.board[i][j] == '■':
@@ -41,7 +44,7 @@ class Game:
         for coord in self.snake.body:
             stat[self.board.width * coord[0] + coord[1]] = 1
 
-        return stat
+        return stat"""
 
     def printG(self):
         disp =  []

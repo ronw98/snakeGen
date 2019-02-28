@@ -13,7 +13,9 @@ import IAGame
 import os
 import random
 import Board as Board
-import  Snake as Snake
+import Snake as Snake
+import math
+import time
 from pynput import keyboard
 
 global next
@@ -24,32 +26,69 @@ class Genetics:
         self.results = []
         self.bests = []
         self.genNum = 0
+        self.average = 0
+        self.maxFit = 0
 
     def fitness(self,gameRes):
         score = gameRes[0]
         nbFrames = gameRes[1]
-        return 50*score + nbFrames
-
+        """nbTurns = gameRes[2]
+        nextToWall = gameRes[3]
+        tmaxNotEat = gameRes[4]
+        timeout = gameRes[5]
+        frameCoeff = 0.05 if timeout and score !=0 else 0.5
+        return score #+ frameCoeff* nbFrames"""
+        if score < 10:
+            fitness = math.floor(nbFrames * nbFrames) * math.pow(2,score)
+        else:
+            fitness = math.floor(nbFrames * nbFrames) * math.pow(2,10) * (score-9)
+        return fitness
     def bestOnes(self):
         nbWanted = 2
-        self.bests = []
+        bests = []
         def takeFirst(elem):
             return elem[0]
         for result in self.results:
-            if len(self.bests)<0.1*self.popSize:
-                self.bests.append(result)
+            if len(bests)<0.1*self.popSize:
+                bests.append(result)
             else:
-                self.bests.sort(key=takeFirst,reverse=True)
-                if result[0] > self.bests[-1][0]:
-                    del self.bests[-1]
-                    self.bests.append(result)
-                    self.bests.sort(key=takeFirst,reverse=True)
+                bests.sort(key=takeFirst,reverse=True)
+                if result[0] > bests[-1][0]:
+                    del bests[-1]
+                    bests.append(result)
+                    bests.sort(key=takeFirst,reverse=True)
+        return bests
 
-    def createNewPop(self,bests):
+    def selectedForBreed(self):
+        def takeFirst(elem):
+            return elem[0]
+
+        #self.results.sort(key=takeFirst, reverse=True)
+        self.bests = []
+        #self.bests.append(self.results[0])
+        #random.shuffle(self.results)
+        while len(self.bests) < 0.1*self.popSize:
+            for result in self.results:
+                chosen = (result[0] > random.uniform(-1,500))
+                if chosen and len(self.bests) < 0.1*self.popSize and not result in self.bests:
+                    self.bests.append(result)
+
+    def createNewPop(self):
         tmp=[]
-        bestNeurons = [couple[1] for couple in bests]
-        #random.shuffle(bestNeurons)
+        bestNeurons = [couple[1] for couple in self.bests]
+        random.shuffle(bestNeurons)
+        """while len(tmp) < self.popSize:
+            breed = []
+            while len(breed) < 2:
+                for result in self.results:
+                    chosen = (5 * result[0] > random.uniform(0,2 * self.maxFit))
+                    if chosen and len(breed) < 2:
+                        breed.append(result[1])
+            children = breed[0].reproduction(breed[1])
+            tmp.append(children[0])
+            tmp.append(children[1])"""
         for i in range(0,10):
+            random.shuffle(bestNeurons)
             for par1,par2 in zip(bestNeurons[0::2],bestNeurons[1::2]):
                 children = par1.reproduction(par2)
                 tmp.append(children[0])
@@ -61,40 +100,89 @@ class Genetics:
                 individual.mutate()
 
     def playOneGen(self,height,width):
+        self.maxFit = 0
         game = IAGame.Game(height,width)
         self.results = []
+        self.average = 0
         for network in self.population:
             score = 0
             nbFrames = 0
+            nbTurns = 0
+            nextToWall = 0
+            tmaxNotEat = 0
+            tNotEat = 0
             finished = False
-            while not finished and nbFrames < 1000:
-                input = game.status()
+            while (not finished) and tNotEat < 200:
+                input = game.snake.lookAllDir(game.board)
                 move = network.takeDecision(input)
+                ch1 = ch2 = ch3 = ch4 = False
                 if move == 0:
-                    game.snake.changeDirection((0, 1))
+                    ch1 = game.snake.changeDirection((0, 1))
                 elif move == 1:
-                    game.snake.changeDirection((0, -1))
+                    ch2 = game.snake.changeDirection((0, -1))
                 elif move == 2:
-                    game.snake.changeDirection((1, 0))
+                    ch3 = game.snake.changeDirection((1, 0))
                 elif move == 3:
-                    game.snake.changeDirection((-1, 0))
+                    ch4 = game.snake.changeDirection((-1, 0))
                 game.snake.move()
                 nbFrames+=1
+                if game.snake.head()[0] >= game.board.height-2 or game.snake.head()[0] <= 1 or game.snake.head()[1] >= game.board.width-2 or game.snake.head()[1] <= 1:
+                    nextToWall+=1
+                if ch1 or ch2 or ch3 or ch4:
+                    nbTurns +=1
+                tNotEat+=1
                 if (game.hasEaten()):
                     game.snake.grow()
                     game.board.createFruit()
                     score += 1
+                    tmaxNotEat = max(tNotEat,tmaxNotEat)
+                    tNotEat -= 100
                 if game.end():
                     finished = True
-            self.results.append([self.fitness([score,nbFrames]),network])
+                if score == 0:
+                    tmaxNotEat = nbFrames
+            fit = self.fitness([score,nbFrames,nbTurns,nextToWall,tmaxNotEat, tNotEat>200])
+            self.maxFit = max(self.maxFit,fit)
+            self.results.append([fit,network])
+            self.average+=fit
             game.reset()
+        self.average/= self.popSize
         self.genNum+=1
+
+
+
+
+#Definition of some functions cause I need em
+def moyenne(liste):
+    av = 0
+    for element in liste:
+        av += element
+    av /= len(liste)
+    return av
+
+def variance(liste):
+    av = moyenne(liste)
+    partSum = 0
+    for element in liste:
+        partSum += math.pow(element-av,2)
+    variance = partSum / len(liste)
+    return variance
+
+def normalize(liste):
+    tmp = []
+    av = moyenne(liste)
+    var = variance(liste)
+    for element in liste:
+        tmpelement = (element - av) / var
+        tmp.append(tmpelement)
+    return tmp
 
 
 def on_press(key):
     global next
     if key == keyboard.Key.up:
         next = True
+
 
 if __name__=='__main__':
     fit = []
@@ -115,36 +203,6 @@ if __name__=='__main__':
     if len(sys.argv) == 2 and sys.argv[1] == '--help':
         print (help)
         sys.exit()
-        """if len(sys.argv) == 3:
-            if sys.argv[1] == '-n':
-                try:
-                    nbGenerationToRun = int(sys.argv[2])
-                except:
-                    print('Argument must be an integer\n')
-                    sys.exit()
-            elif sys.argv[1] == 's':
-                try:
-                    GenerationSize= int(sys.argv[2])
-                except:
-                    print('Argument must be an integer\n')
-                    sys.exit()
-        if len(sys.argv) == 5:
-            try:
-                if sys.argv[1] == '-n' and sys.argv[3] == '-s':
-                    nbGenerationToRun = int(sys.argv[2])
-                    GenerationSize = int(sys.argv[4])
-                elif sys.argv[3] == '-n' and sys.argv[1] == '-s':
-                    nbGenerationToRun = int(sys.argv[4])
-                    GenerationSize = int(sys.argv[2])
-                else:
-                    print('Wrong arguments format. Call --help for expected format.')
-                    sys.exit()
-            except:
-                print('Argument must be an integer\n')
-                sys.exit()
-        elif  len(sys.arv) != 0:
-            print('Wrong arguments format. Call --help for expected format.')
-            sys.exit()"""
     else:
         for i in range(1,len(sys.argv)-1):
             try:
@@ -160,8 +218,9 @@ if __name__=='__main__':
             except:
                 print('Argument must be an integer\n')
                 sys.exit()
-    gen = Genetics(GenerationSize,[height*width,30,4])
+    gen = Genetics(GenerationSize,[24,15,4])
     print(nbGenerationToRun)
+    fitlognum = len([name for name in os.listdir('fit')])
     os.system('rm -rf Logs')
     os.system('mkdir Logs')
     for i in range(0,nbGenerationToRun):
@@ -171,24 +230,35 @@ if __name__=='__main__':
     for i in range(0,nbGenerationToRun):
         print("Generation numero: {}".format(i))
         gen.playOneGen(height,width)
-        gen.bestOnes()
-        gen.createNewPop(gen.bests)
+        #gen.selectedForBreed()
+        #gen.bests = []
+        gen.bests = gen.bestOnes()
+        gen.createNewPop()
         gen.mutation()
-        print(len(gen.population))
+        print("Pop: {}".format(len(gen.population)))
         average = 0
         for result in gen.bests:
             average+=result[0]
             if i % 10 ==0 or i==nbGenerationToRun-1:
-                print('Fitness: {}\n'.format(result[0]))
-        print("Average fitness: {} ".format(average/len(gen.bests)))	
-        fit.append(average/len(gen.bests))
-            #os.system('gedit Logs/Generation{}/result.log &'.format(gen.genNum-1))
-    with open('fitresult.log','w') as file:
-        file.write(str(fit))
+                with open('Logs/Generation{}/result.log'.format(gen.genNum-1), 'w') as file:
+                    average = 0
+                    for result in gen.bests:
+                        average+=result[0]
+                        file.write('Fitness: {}\n'.format(result[0]))
+                    file.write("Average fitness: {} \n".format(gen.average))
+        fit.append(gen.average)
+    #fit = normalize(fit)
+    with open('fit/fitresult{}.csv'.format(fitlognum),'w') as file:
+        for element in fit:
+            file.write("{}\n".format(element))
+    gen.bests = gen.bestOnes()
     for best in gen.bests:
         bestEver.append(best)
     global next
     next = False
+    sys.stdout.write('\a')
+    sys.stdout.flush()
+    a = input("Enter to play last gen")
     with keyboard.Listener(on_press=on_press) as listener:
         for element in bestEver:
             network = element[1]
@@ -196,8 +266,10 @@ if __name__=='__main__':
             game.printG()
             finished = False;
             score = 0;
-            while not finished:
-                input = game.status()
+            tNotEat = 0
+            while not finished and tNotEat <200:
+                time.sleep(0.1)
+                input = game.snake.lookAllDir(game.board)
                 move = network.takeDecision(input)
                 print(move)
                 if move == 0:
@@ -213,12 +285,12 @@ if __name__=='__main__':
                     game.snake.grow()
                     game.board.createFruit()
                     score += 1
+                    tNotEat -= 100
                 if game.end():
                     finished = True
-                #os.system('clear')
+                os.system('clear')
+                tNotEat +=1
                 game.printG()
-                while not next:
-                    pass
                 next = False
                 print(score)
-            os.system('clear')
+
