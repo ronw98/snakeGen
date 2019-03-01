@@ -24,12 +24,13 @@ lock = Lock()
 
 def fitness(gameRes):
     score = gameRes[0]
+    nbFrames = gameRes[1]
     if score == 0:
         fitness = math.floor(0.5 * nbFrames * nbFrames)
     elif score < 10:
-        fitness = math.floor(nbFrames * nbFrames) * math.pow(2,score) + 0.5
+        fitness = math.floor(nbFrames * nbFrames) * math.pow(2,score) + score/100
     else:
-        fitness = math.floor(nbFrames * nbFrames) * math.pow(2,10) * (score-9) + 0.5
+        fitness = math.floor(nbFrames * nbFrames) * math.pow(2,10) * (score-9) + score/100
     return fitness
 
 def playProces(individualList,resultList,height,width,queue):
@@ -74,8 +75,8 @@ def playProces(individualList,resultList,height,width,queue):
             if score == 0:
                 tmaxNotEat = nbFrames
         fit = fitness([score, nbFrames, nbTurns, nextToWall, tmaxNotEat, tNotEat > 50])
+        tmpResult.append([fit, player])
         game.reset()
-        tmpResult.append([fit,player])
     queue.put(tmpResult)
 
 global next
@@ -147,7 +148,6 @@ class Genetics:
 
     def playOneGen(self,height,width):
         self.maxFit = 0
-        game = IAGame.Game(height,width)
         self.results = []
         self.average = 0
         queue1 = Queue()
@@ -175,12 +175,12 @@ class Genetics:
         process2 = Process(target=playProces, args=(list2, self.results, height, width, queue2))
         process3 = Process(target=playProces, args=(list3, self.results, height, width, queue3))
         process4 = Process(target=playProces, args=(list4, self.results, height, width, queue4))
-        process5 = Process(target=playProces, args=(list4, self.results, height, width, queue5))
-        process6 = Process(target=playProces, args=(list4, self.results, height, width, queue6))
-        process7 = Process(target=playProces, args=(list4, self.results, height, width, queue7))
-        process8 = Process(target=playProces, args=(list4, self.results, height, width, queue8))
-        process9 = Process(target=playProces, args=(list4, self.results, height, width, queue9))
-        process10 = Process(target=playProces, args=(list4, self.results, height, width, queue10))
+        process5 = Process(target=playProces, args=(list5, self.results, height, width, queue5))
+        process6 = Process(target=playProces, args=(list6, self.results, height, width, queue6))
+        process7 = Process(target=playProces, args=(list7, self.results, height, width, queue7))
+        process8 = Process(target=playProces, args=(list8, self.results, height, width, queue8))
+        process9 = Process(target=playProces, args=(list9, self.results, height, width, queue9))
+        process10 = Process(target=playProces, args=(list10, self.results, height, width, queue10))
 
         process1.start()
         process2.start()
