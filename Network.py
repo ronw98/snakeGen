@@ -127,15 +127,16 @@ class Network:
         for layer in self.weights:
             for neuron in layer:
                 for weight in neuron:
-                    result +="{} ".format(weight)
-                result+="\n"
-            result+="\n\n"
-        result+="\n\n\n"
+                    result +="{};".format(weight)
+                result+="\nnw=nw=nw=nw=\n"
+            result+="\nlw-lw-lw-lw-\n"
+        result+="\n____\n"
         for layer in self.biases:
             for neuronBias in layer:
-                result+="{}".format(neuronBias)
-                result+="\n"
-            result+="\n\n"
+                result+="{};".format(neuronBias)
+                result+="\nnb=nb=nb=nb=\n"
+            result+="\nlb-lb-lb-lb-\n"
+        return result
 
 
 def sigmoid(z):

@@ -17,6 +17,66 @@ import Snake as Snake
 import math
 import time
 from pynput import keyboard
+from threading import Thread, RLock
+from multiprocessing import Process, Lock, Queue
+
+lock = Lock()
+
+def fitness(gameRes):
+    score = gameRes[0]
+    if score == 0:
+        fitness = math.floor(0.5 * nbFrames * nbFrames)
+    elif score < 10:
+        fitness = math.floor(nbFrames * nbFrames) * math.pow(2,score) + 0.5
+    else:
+        fitness = math.floor(nbFrames * nbFrames) * math.pow(2,10) * (score-9) + 0.5
+    return fitness
+
+def playProces(individualList,resultList,height,width,queue):
+    game = IAGame.Game(height, width)
+    tmpResult = []
+    for player in individualList:
+        score = 0
+        nbFrames = 0
+        nbTurns = 0
+        nextToWall = 0
+        tmaxNotEat = 0
+        tNotEat = 0
+        finished = False
+        while (not finished) and tNotEat < 100 and nbFrames < 5000:
+            input = game.snake.lookAllDir(game.board)
+            move = player.takeDecision(input)
+            ch1 = ch2 = ch3 = ch4 = False
+            if move == 0:
+                ch1 = game.snake.changeDirection((0, 1))
+            elif move == 1:
+                ch2 = game.snake.changeDirection((0, -1))
+            elif move == 2:
+                ch3 = game.snake.changeDirection((1, 0))
+            elif move == 3:
+                ch4 = game.snake.changeDirection((-1, 0))
+            game.snake.move()
+            nbFrames += 1
+            if game.snake.head()[0] >= game.board.height - 2 or game.snake.head()[0] <= 1 or game.snake.head()[
+                1] >= game.board.width - 2 or game.snake.head()[1] <= 1:
+                nextToWall += 1
+            if ch1 or ch2 or ch3 or ch4:
+                nbTurns += 1
+            tNotEat += 1
+            if (game.hasEaten()):
+                game.snake.grow()
+                game.board.createFruit()
+                score += 1
+                tmaxNotEat = max(tNotEat, tmaxNotEat)
+                tNotEat = 0
+            if game.end():
+                finished = True
+            if score == 0:
+                tmaxNotEat = nbFrames
+        fit = fitness([score, nbFrames, nbTurns, nextToWall, tmaxNotEat, tNotEat > 50])
+        game.reset()
+        tmpResult.append([fit,player])
+    queue.put(tmpResult)
 
 global next
 class Genetics:
@@ -29,27 +89,13 @@ class Genetics:
         self.average = 0
         self.maxFit = 0
 
-    def fitness(self,gameRes):
-        score = gameRes[0]
-        nbFrames = gameRes[1]
-        """nbTurns = gameRes[2]
-        nextToWall = gameRes[3]
-        tmaxNotEat = gameRes[4]
-        timeout = gameRes[5]
-        frameCoeff = 0.05 if timeout and score !=0 else 0.5
-        return score #+ frameCoeff* nbFrames"""
-        if score < 10:
-            fitness = math.floor(nbFrames * nbFrames) * math.pow(2,score)
-        else:
-            fitness = math.floor(nbFrames * nbFrames) * math.pow(2,10) * (score-9)
-        return fitness
     def bestOnes(self):
         nbWanted = 2
         bests = []
         def takeFirst(elem):
             return elem[0]
         for result in self.results:
-            if len(bests)<0.1*self.popSize:
+            if len(bests)<0.5*self.popSize:
                 bests.append(result)
             else:
                 bests.sort(key=takeFirst,reverse=True)
@@ -67,14 +113,14 @@ class Genetics:
         self.bests = []
         #self.bests.append(self.results[0])
         #random.shuffle(self.results)
-        while len(self.bests) < 0.1*self.popSize:
+        while len(self.bests) < 0.3*self.popSize:
             for result in self.results:
                 chosen = (result[0] > random.uniform(-1,500))
                 if chosen and len(self.bests) < 0.1*self.popSize and not result in self.bests:
                     self.bests.append(result)
 
     def createNewPop(self):
-        tmp=[]
+        tmp=[couple[1] for couple in self.bests]
         bestNeurons = [couple[1] for couple in self.bests]
         random.shuffle(bestNeurons)
         """while len(tmp) < self.popSize:
@@ -87,7 +133,7 @@ class Genetics:
             children = breed[0].reproduction(breed[1])
             tmp.append(children[0])
             tmp.append(children[1])"""
-        for i in range(0,10):
+        while len(tmp) < self.popSize:
             random.shuffle(bestNeurons)
             for par1,par2 in zip(bestNeurons[0::2],bestNeurons[1::2]):
                 children = par1.reproduction(par2)
@@ -104,49 +150,67 @@ class Genetics:
         game = IAGame.Game(height,width)
         self.results = []
         self.average = 0
-        for network in self.population:
-            score = 0
-            nbFrames = 0
-            nbTurns = 0
-            nextToWall = 0
-            tmaxNotEat = 0
-            tNotEat = 0
-            finished = False
-            while (not finished) and tNotEat < 200:
-                input = game.snake.lookAllDir(game.board)
-                move = network.takeDecision(input)
-                ch1 = ch2 = ch3 = ch4 = False
-                if move == 0:
-                    ch1 = game.snake.changeDirection((0, 1))
-                elif move == 1:
-                    ch2 = game.snake.changeDirection((0, -1))
-                elif move == 2:
-                    ch3 = game.snake.changeDirection((1, 0))
-                elif move == 3:
-                    ch4 = game.snake.changeDirection((-1, 0))
-                game.snake.move()
-                nbFrames+=1
-                if game.snake.head()[0] >= game.board.height-2 or game.snake.head()[0] <= 1 or game.snake.head()[1] >= game.board.width-2 or game.snake.head()[1] <= 1:
-                    nextToWall+=1
-                if ch1 or ch2 or ch3 or ch4:
-                    nbTurns +=1
-                tNotEat+=1
-                if (game.hasEaten()):
-                    game.snake.grow()
-                    game.board.createFruit()
-                    score += 1
-                    tmaxNotEat = max(tNotEat,tmaxNotEat)
-                    tNotEat -= 100
-                if game.end():
-                    finished = True
-                if score == 0:
-                    tmaxNotEat = nbFrames
-            fit = self.fitness([score,nbFrames,nbTurns,nextToWall,tmaxNotEat, tNotEat>200])
-            self.maxFit = max(self.maxFit,fit)
-            self.results.append([fit,network])
-            self.average+=fit
-            game.reset()
-        self.average/= self.popSize
+        queue1 = Queue()
+        queue2 = Queue()
+        queue3 = Queue()
+        queue4 = Queue()
+        queue5 = Queue()
+        queue6 = Queue()
+        queue7 = Queue()
+        queue8 = Queue()
+        queue9 = Queue()
+        queue10 = Queue()
+        list1 = [self.population[i] for i in range(0,self.popSize//10) ]
+        list2 = [self.population[i] for i in range(self.popSize//10+1, 2* self.popSize // 10)]
+        list3 = [self.population[i] for i in range(2* self.popSize//10 +1, 3* self.popSize//10)]
+        list4 = [self.population[i] for i in range( 3* self.popSize//10 +1,  4* self.popSize//10)]
+        list5 = [self.population[i] for i in range( 4* self.popSize//10 +1,  5* self.popSize//10)]
+        list6 = [self.population[i] for i in range( 5* self.popSize//10 +1,  6* self.popSize//10)]
+        list7 = [self.population[i] for i in range( 6* self.popSize//10 +1,  7* self.popSize//10)]
+        list8 = [self.population[i] for i in range( 7* self.popSize//10 +1,  8* self.popSize//10)]
+        list9 = [self.population[i] for i in range( 8* self.popSize//10 +1,  9* self.popSize//10)]
+        list10 = [self.population[i] for i in range( 9* self.popSize//10 +1,   self.popSize-1)]
+
+        process1 = Process(target=playProces, args=(list1, self.results ,height, width, queue1))
+        process2 = Process(target=playProces, args=(list2, self.results, height, width, queue2))
+        process3 = Process(target=playProces, args=(list3, self.results, height, width, queue3))
+        process4 = Process(target=playProces, args=(list4, self.results, height, width, queue4))
+        process5 = Process(target=playProces, args=(list4, self.results, height, width, queue5))
+        process6 = Process(target=playProces, args=(list4, self.results, height, width, queue6))
+        process7 = Process(target=playProces, args=(list4, self.results, height, width, queue7))
+        process8 = Process(target=playProces, args=(list4, self.results, height, width, queue8))
+        process9 = Process(target=playProces, args=(list4, self.results, height, width, queue9))
+        process10 = Process(target=playProces, args=(list4, self.results, height, width, queue10))
+
+        process1.start()
+        process2.start()
+        process3.start()
+        process4.start()
+        process5.start()
+        process6.start()
+        process7.start()
+        process8.start()
+        process9.start()
+        process10.start()
+
+
+        res = [queue1.get(),queue2.get(),queue3.get(),queue4.get(),queue5.get(),queue6.get(),queue7.get(),queue8.get(),queue9.get(),queue10.get()]
+        process1.join()
+        process2.join()
+        process3.join()
+        process4.join()
+        process5.join()
+        process6.join()
+        process7.join()
+        process8.join()
+        process9.join()
+        process10.join()
+        for queue in res:
+            for element in queue:
+                self.results.append(element)
+        for i in range(0,len(self.results)):
+            self.average += self.results[i][0]
+        self.average/=len(self.results)
         self.genNum+=1
 
 
@@ -254,6 +318,12 @@ if __name__=='__main__':
     gen.bests = gen.bestOnes()
     for best in gen.bests:
         bestEver.append(best)
+    os.system('mkdir GenNeurLog')
+    neurIndex = 0
+    for neuron in gen.bests:
+        with open('GenNeurLog/Neuron{}'.format(neurIndex),'w') as logfile:
+            logfile.write(neuron[1].tolog())
+        neurIndex+=1
     global next
     next = False
     sys.stdout.write('\a')
@@ -267,10 +337,10 @@ if __name__=='__main__':
             finished = False;
             score = 0;
             tNotEat = 0
-            while not finished and tNotEat <200:
-                time.sleep(0.1)
-                input = game.snake.lookAllDir(game.board)
-                move = network.takeDecision(input)
+            while not finished and tNotEat <100:
+                time.sleep(0.05)
+                inp = game.snake.lookAllDir(game.board)
+                move = network.takeDecision(inp)
                 print(move)
                 if move == 0:
                     game.snake.changeDirection((0, 1))
@@ -285,7 +355,7 @@ if __name__=='__main__':
                     game.snake.grow()
                     game.board.createFruit()
                     score += 1
-                    tNotEat -= 100
+                    tNotEat -= 50
                 if game.end():
                     finished = True
                 os.system('clear')
@@ -293,4 +363,5 @@ if __name__=='__main__':
                 game.printG()
                 next = False
                 print(score)
-
+            b=input("Continuer")
+            os.system('clear')
