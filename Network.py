@@ -1,5 +1,6 @@
 import random
 import math
+import re
 class Network:
     def __init__(self,sizes,zero=False):
         """The list ``sizes`` contains the number of neurons in the
@@ -12,7 +13,7 @@ class Network:
         layer is assumed to be an input layer, and by convention we
         won't set any biases for those neurons, since biases are only
         ever used in computing the outputs from later layers."""
-        if zero == False:
+        if not zero :
             self.num_layers = 3
             self.sizes = sizes
             self.biases = [[random.uniform(-1,1) for x in range(0,y)] for y in sizes[1:]]
@@ -30,17 +31,17 @@ class Network:
         """Return the output of the network if ``a`` is input."""
         outputValues = []
         hidValues = []
-        #hidden layer values
-        #for each neuron
+        # Hidden layer values
+        # For each neuron
         for neuron in range(0,self.sizes[1]):
-            #compute linear combination
+            # Compute linear combination
             z = 0
             for weight in range(0,self.sizes[0]):
                 z+= a[weight] * self.weights[0][neuron][weight]
             z+= self.biases[0][neuron]
             z=sigmoid(z)
             hidValues.append(z)
-        #output values
+        # Output values
         for neuron in range(0,self.sizes[2]):
             z = 0
             for weight in range(0,self.sizes[1]):
@@ -50,9 +51,11 @@ class Network:
             outputValues.append(z)
         return outputValues
 
+    # Takes a decision according to the given input
     def takeDecision(self,input):
         return findMax(self.feedforward(input))
 
+    # Returns a list of two networks, corresponding to the chidren of self and the given network
     def reproduction(self,network):
         child1 = Network(self.sizes)
         child2 = Network(self.sizes)
@@ -102,6 +105,7 @@ class Network:
                 child2.biases[k-1][i] = network.biases[k-1][i]
         return [child1,child2]
 
+    # Self explained: changes a random number of weights and bias (i.e. genes) in the network
     def mutate(self):
         for layer in self.weights:
             for neuron in layer:
@@ -122,6 +126,8 @@ class Network:
                         bias = 1
                     if bias < -1:
                         bias = -1
+
+    # Returns a formatted string corresponding to the network
     def tolog(self):
         result = ""
         for layer in self.weights:
@@ -138,16 +144,48 @@ class Network:
             result+="\nlb-lb-lb-lb-\n"
         return result
 
+# Returns a neuron created from a log file
+def fromLog(filename,sizes):
+    network = Network(sizes,zero=True)
+    with open(filename,'r') as file:
+        layerindex= neuronindex= 0
+        weight=True
+
+        for line in file:
+            if weight:
+                if line == 'nw=nw=nw=nw=\n':
+                    neuronindex+=1
+                elif line == 'lw-lw-lw-lw-\n':
+                    neuronindex = 0
+                    layerindex += 1
+                elif line == '____\n':
+                    neuronindex = 0
+                    layerindex = 0
+                    weight = False
+                elif re.match("\s+", line) is not None:
+                    pass
+                else:
+                    network.weights[layerindex][neuronindex] = [float(x) for x in line[:-2].split(';')]
+            else:
+                if line == 'nb=nb=nb=nb=\n':
+                    neuronindex+=1
+                elif line == 'lb-lb-lb-lb-\n':
+                    neuronindex = 0
+                    layerindex += 1
+                elif re.match("\s+",line):
+                    pass
+                else:
+                    network.biases[layerindex][neuronindex] = float(line[:-2])
+    return network
+
+
+
 
 def sigmoid(z):
     """The sigmoid function."""
     return 1.0/(1.0+math.exp(-z))
 
-def relu(z):
-    if z < 0:
-        return 0
-    return z
-
+# Returns the max value in the given array
 def findMax(tab):
     imax = 0
     max = tab[0]
@@ -158,6 +196,5 @@ def findMax(tab):
     return imax
 
 if __name__  ==  '__main__':
-    net1 =Network([2,5,3])
-    net2 = Network([2,5,3])
-    children = net1.reproduction(net2)
+    print("This module is not to be called. Call Genetics.py instead")
+    exit()
