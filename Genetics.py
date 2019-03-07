@@ -188,7 +188,7 @@ if __name__=='__main__':
     width = 30
     sourceFolder = None
     """ Checks all the arguments given"""
-    for i in range(1, len(sys.argv)-1):
+    for i in range(1, len(sys.argv),2):
         opt = sys.argv[i]
         if opt == '--help':
             print(createHelp())
