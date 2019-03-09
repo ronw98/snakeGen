@@ -1,6 +1,7 @@
 import random
 import math
 import re
+import numpy
 class Network:
     def __init__(self,sizes,zero=False):
         """The list ``sizes`` contains the number of neurons in the
@@ -16,9 +17,8 @@ class Network:
         if not zero :
             self.num_layers = 3
             self.sizes = sizes
-            self.biases = [[random.uniform(-1,1) for x in range(0,y)] for y in sizes[1:]]
-            self.weights = [[[random.uniform(-1,1) for prevneuron in range(0,sizes[i-1])]for neuron in range(0,sizes[i])]
-                            for i in range(1,3)]
+            self.biases = [numpy.random.randn(y, 1) for y in sizes[1:]]
+            self.weights = [numpy.random.randn(y, x) for x, y in zip(sizes[:-1],sizes[1:])]
         else:
             self.num_layers = 3
             self.sizes = sizes
@@ -29,31 +29,14 @@ class Network:
 
     def feedforward(self, a):
         """Return the output of the network if ``a`` is input."""
-        outputValues = []
-        hidValues = []
-        # Hidden layer values
-        # For each neuron
-        for neuron in range(0,self.sizes[1]):
-            # Compute linear combination
-            z = 0
-            for weight in range(0,self.sizes[0]):
-                z+= a[weight] * self.weights[0][neuron][weight]
-            z+= self.biases[0][neuron]
-            z=sigmoid(z)
-            hidValues.append(z)
-        # Output values
-        for neuron in range(0,self.sizes[2]):
-            z = 0
-            for weight in range(0,self.sizes[1]):
-                z+= hidValues[weight] * self.weights[1][neuron][weight]
-            z+= self.biases[1][neuron]
-            z = sigmoid(z)
-            outputValues.append(z)
-        return outputValues
+        output = a
+        for b, w in zip(self.biases, self.weights):
+            output = sigmoid(numpy.dot(w, output)+b[0])
+        return output
 
     # Takes a decision according to the given input
     def takeDecision(self,input):
-        return findMax(self.feedforward(input))
+        return numpy.argmax(self.feedforward(input))
 
     # Returns a list of two networks, corresponding to the chidren of self and the given network
     def reproduction(self,network):
@@ -183,7 +166,7 @@ def fromLog(filename,sizes):
 
 def sigmoid(z):
     """The sigmoid function."""
-    return 1.0/(1.0+math.exp(-z))
+    return 1.0/(1.0+numpy.exp(-z))
 
 # Returns the max value in the given array
 def findMax(tab):
