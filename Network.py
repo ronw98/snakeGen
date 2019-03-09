@@ -95,20 +95,12 @@ class Network:
                     for weight in neuron:
                         i = random.uniform(0,1000)
                         if i == 0:
-                            weight+= random.randint(-1,1) * random.uniform(0,0.75)
-                            if weight > 1:
-                                weight =1
-                            if weight < -1:
-                                weight = -1
+                            weight+= random.randint(-1,1) * numpy.random.normal(0,1)
         for layer in self.biases:
             for bias in layer:
                 i = random.randint(0,1000)
                 if i == 0:
-                    bias += random.randint(-1,1) * random.uniform(0,0.75)
-                    if bias > 1:
-                        bias = 1
-                    if bias < -1:
-                        bias = -1
+                    bias += random.randint(-1,1) * numpy.random.normal(0,1)
 
     # Returns a formatted string corresponding to the network
     def tolog(self):
