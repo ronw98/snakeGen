@@ -71,10 +71,10 @@ class Game:
                 self.snake.changeDirection((-1, 0))
             self.snake.move()
             nbFrames += 1
+            tNotEat += 1
             if self.snake.head()[0] >= self.board.height - 2 or self.snake.head()[0] <= 1 or self.snake.head()[
                 1] >= self.board.width - 2 or self.snake.head()[1] <= 1:
                 nextToWall += 1
-            tNotEat += 1
             if self.hasEaten():
                 self.snake.grow()
                 self.board.createFruit()
