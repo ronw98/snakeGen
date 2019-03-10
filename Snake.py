@@ -15,8 +15,9 @@ class Snake:
 
     # Retuns true if the current postition is on the snake's body
     def isBody(self,pos):
-        for coord in self.body:
-            if coord[0] == pos[0] and coord[1] == coord[1] and pos != self.head():
+        head = self.head()
+        for i in range(1, len(self.body)):
+            if head == self.body[i]:
                 return True
         return False
 
@@ -46,6 +47,7 @@ class Snake:
 
     def head(self):
         return self.body[0]
+
     # Returns the length of the snake's body
     def length(self):
         return len(self.body)
@@ -62,7 +64,7 @@ class Snake:
         while not board.isWall(pos):
             if not foundFood and board.isFruit(pos):
                 foundFood = True
-                res[0] = 1/distance
+                res[0] = 5/distance
             if not foundSnake and self.isBody(pos):
                 foundSnake = True
                 res[1] = 1/distance

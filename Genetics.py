@@ -148,7 +148,7 @@ def fitness(gameRes):
     score = gameRes[0]
     nbFrames = gameRes[1]
     if score == 0:
-        fitnessRes = math.floor(0.5 * nbFrames * nbFrames)
+        fitnessRes = 0
     elif score < 10:
         fitnessRes = math.floor(nbFrames * nbFrames) * math.pow(2,score) + score/100
     else:

@@ -120,6 +120,7 @@ class Network:
         return result
 
 # Returns a neuron created from a log file
+# noinspection PyTypeChecker
 def fromLog(filename,sizes):
     network = Network(sizes,zero=True)
     with open(filename,'r') as file:
@@ -127,6 +128,8 @@ def fromLog(filename,sizes):
         weight=True
 
         for line in file:
+            line = line.replace("[","")
+            line = line.replace("]","")
             if weight:
                 if line == 'nw=nw=nw=nw=\n':
                     neuronindex+=1

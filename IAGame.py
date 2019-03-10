@@ -52,13 +52,13 @@ class Game:
         self.snake=Snake.Snake(self.board.height,self.board.width)
 
     # Lets the given neural network play one game, returns the number of frames and score obtained
-    def play(self,network, watched=False,frameRate=0.1):
+    def play(self,network, watched=False,frameRate=0.1, infinite=False):
         score = 0
         nbFrames = 0
         nextToWall = 0
         tNotEat = 0
         finished = False
-        while (not finished) and tNotEat < 100 and nbFrames < 5000:
+        while (not finished) and (tNotEat < 100 and nbFrames < 5000 or infinite):
             input = self.snake.lookAllDir(self.board)
             move = network.takeDecision(input)
             if move == 0:
