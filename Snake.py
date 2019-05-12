@@ -5,13 +5,16 @@ This module defines the behavior of the snake
 
 class Snake:
     # Initializes the snake at the center of the board, heading right
-    def __init__(self, height, width):
+    def __init__(self, height, width, watched=True):
         posy = height//2
         posx = width//2
         self.direction = (0, 1)
         self.body = [(posy, posx)]
         self.body+=[(self.body[0][0]-self.direction[0],self.body[0][1]-self.direction[1])]
         self.body += [(self.body[1][0] - self.direction[0], self.body[1][1] - self.direction[1])]
+        length = 0 if watched else 6
+        for i in range(length):
+            self.grow()
 
     # Retuns true if the current postition is on the snake's body
     def isBody(self,pos):
